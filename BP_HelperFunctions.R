@@ -1,4 +1,5 @@
 #### allPathsInParallel ####
+# Extracts all of the individual shortest paths
 allPathsInParallel <- function(theEdges, theOriPaths){
   allPaths <- foreach(i=1:length(theOriPaths)) %dopar% {
     return(as.vector(theEdges[unlist(theOriPaths[[i]])]));
@@ -8,6 +9,7 @@ allPathsInParallel <- function(theEdges, theOriPaths){
 
 
 #### allPathLengthsInParallel ####
+# Extracts the number of edges in the individual shortest paths
 allPathLengthsInParallel <- function(theOriPaths){
   allPathLengths <- foreach(i=1:length(theOriPaths)) %dopar% {
     return(as.vector(unlist(lapply(theOriPaths[[i]],length))));
@@ -17,6 +19,7 @@ allPathLengthsInParallel <- function(theOriPaths){
 
 
 #### allShortestPathsInParallel ####
+# Calculates the shortest path beteen all theCentroidNodes in the graph
 allShortestPathsInParallel <- function(graph, theCentroidNodes) {
   allOriPaths <- foreach(i=1:dim(theCentroidNodes)[1]) %dopar% {
     fromNode <- igraph::V(graph)[theCentroidNodes$NodeId[i]];
@@ -28,10 +31,11 @@ allShortestPathsInParallel <- function(graph, theCentroidNodes) {
 
 
 #### assignFlows ####
+# The function that calculates all the shortest paths and extract the OD costs.
+# When run with _CalculateCorrelations_ == TRUE, it also determines the effect of the individual segments
 assignFlows <- function(graph, CalculateCorrelations){
   
   start_time <- Sys.time()
-  
   invisible(gc());
   
   E(graph)$Benefit <- 0
@@ -53,7 +57,7 @@ assignFlows <- function(graph, CalculateCorrelations){
   
   
   #print("Finding all shortest paths")
-  allOriPaths <- allShortestPathsInParallel(graph,CentroidNodes);
+  allOriPaths <- allShortestPathsInParallel(graph,CentroidsData);
   progr <- 25;
   if(CalculateCorrelations){
     progr <- progr/3
@@ -98,6 +102,7 @@ assignFlows <- function(graph, CalculateCorrelations){
     # Paths, one after another as a vector
     paths <- allPaths[[i]];
     
+    #Determines the influence of each of the segments. Only when _CalculateCorrelations_ == TRUE
     totalAgg <- 0;
     totalDT <- 0;
     if(CalculateCorrelations){
@@ -161,6 +166,8 @@ assignFlows <- function(graph, CalculateCorrelations){
 
 
 #### calculateTravelTimeSavings ####
+# Function that calculated the travel times of a scenario determined by _selectedLinks_, and outputs 
+# the travel time savings compared to the basis scenario. 
 calculateTravelTimeSavings <- function(selectedLinks){
   travelTimeSavings <- 0;
   for(travelerType in 1:N_TravelerTypes){
@@ -171,7 +178,7 @@ calculateTravelTimeSavings <- function(selectedLinks){
     E(g)$weight[selectedLinks]  <- allWeights[[paste0("Upgraded",travelerType)]][selectedLinks];
     
     out <- assignFlows(g, FALSE);
-    gcs_All <- out$GCs / 60;
+    gcs_All <- out$GCs / 60 * CYCLIST_UNIT_PRICE_PER_MINUTE;
     gcs_Dif <- gcs_Basis - gcs_All;
     
     travelTimeSavings <- travelTimeSavings + sum(OD*gcs_Dif);
@@ -181,13 +188,14 @@ calculateTravelTimeSavings <- function(selectedLinks){
 
 
 #### createODMatrix ####
+# Transform the OD demand matrix from long format to square format
 createODMatrix <- function(dat){
   out <- matrix(0,nrow=N_centroids, ncol=N_centroids);
   for( i in 1:dim(dat)[1]){
     val <- dat$value[i];
     if(!is.na(val)){
-      fromIndex <- which(CentroidNodes$ZoneID == dat$FromZoneID[i])
-      toIndex <- which(CentroidNodes$ZoneID == dat$ToZoneID[i])
+      fromIndex <- which(CentroidsData$ZoneID == dat$FromZoneID[i])
+      toIndex <- which(CentroidsData$ZoneID == dat$ToZoneID[i])
       out[fromIndex, toIndex] <- val; 
     }
   }
@@ -196,6 +204,7 @@ createODMatrix <- function(dat){
 
 
 #### determineMaximumSpeed ####
+# Based on the infrastructure type (vMaxType) determines the link speed of a traveler of _bikeType_ and _speedType_
 determineMaximumSpeed <- function(vMaxType, bikeType, speedType){
   if(bikeType == 1){
     if(speedType == 1){
@@ -279,6 +288,7 @@ determineMaximumSpeed <- function(vMaxType, bikeType, speedType){
 }
 
 #### updateNetworkCosts ####
+# Updaes the network costs according to the maximum speeds of the various infrastructure types
 updateNetworkCosts <- function(g, infrastructureTypes, vMax_1, vMax_2, vMax_3){
   weights <- numeric(dim(LinksData)[1])+1000000; # A very high value
   weights <- ifelse(infrastructureTypes == 1, E(g)$Length / (vMax_1 / 3.6) + E(g)$IntersectionDelay, weights);
