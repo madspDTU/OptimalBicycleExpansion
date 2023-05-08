@@ -42,7 +42,6 @@ assignFlows <- function(graph, CalculateCorrelations){
   E(graph)$Flow <- 0
   
   GeneralisedCostMatrix <- matrix(0,ncol = N_centroids, nrow = N_centroids);
-  GeneralisedCostMatrix_Length <- matrix(0,ncol = N_centroids, nrow = N_centroids);
   
   pb <- txtProgressBar(min = 0, max = 100, style = 3, width = 33)
   if(CalculateCorrelations){
