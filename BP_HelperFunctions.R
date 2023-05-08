@@ -141,7 +141,6 @@ assignFlows <- function(graph, CalculateCorrelations){
     
     # Costs of the edges of paths
     pathGCs <- edgeWeights[paths];
-    pathSPLengths <- edgeLengths[paths]
     # Corresponding destinations
     destinations <- rep(1:N_centroids, times = pathLengths)
     
