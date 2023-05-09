@@ -521,7 +521,7 @@ for( scenarioType in c("Long","Short","RandomFirst")){
       #From travel time savings to actual, scaled consumer surplus
       rawConsumerSurplus <- travelTimeSavings / 1e6 * AADT_FACTOR 
       #Discounting the consumer surplus
-      if(currentT == startT){
+      if(currentT == 1){
         CSPart <- rawConsumerSurplus;
       } else {
         CSPart <- rawConsumerSurplus / DISCOUNT_FACTORS[currentT-1]
