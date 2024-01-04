@@ -3,7 +3,7 @@ Repository for societally optimal expansions of bicycle networks
 
 The model is developed for the article "Societally optimal expansion of bicycle networks", currently under review in Transportation Research Part B: Methodological. Please cite as:
 
-*Paulsen, M., & Rich, J. (2023). Societally optimal expansion of bicycle networks. Revised manuscript submitted after first round of review at Transportation Research Part B: Methodological.*
+*Paulsen, M., & Rich, J. (2023). Societally optimal expansion of bicycle networks. Transportation Research Part B: Methodological, 174,* 102778.
 
 
 The project consists of four `R` files:
